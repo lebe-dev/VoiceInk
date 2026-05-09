@@ -106,11 +106,11 @@
 - Modify: `VoiceInk/Views/AI Models/ModelCardView.swift`
 - Modify: `VoiceInk/Views/AI Models/ModelManagementView.swift`
 
-- [ ] Создать `GigaAMModelCardView` по шаблону `FluidAudioModelCardView.swift`: кнопки Download / Cancel / Delete / Set as default; прогресс-бар читает `gigaAMModelManager.downloadStatuses[model.name]`
-- [ ] В `ModelCardView` добавить ветку `case .gigaAM: if let m = model as? GigaAMModel { GigaAMModelCardView(model: m, ...) }`
-- [ ] В `ModelManagementView.swift` (~line 320) расширить фильтр `.local`: добавить `|| $0.provider == .gigaAM`
-- [ ] `make all` — сборка проходит
-- [ ] `make dev` — приложение запускается, в Settings → AI Models → фильтр Local появилась карточка GigaAM v3 (Russian)
+- [x] Создать `GigaAMModelCardView` по шаблону `FluidAudioModelCardView.swift`: кнопки Download / Cancel / Delete / Set as default; прогресс-бар читает `gigaAMModelManager.downloadStatuses[model.name]`
+- [x] В `ModelCardView` добавить ветку `case .gigaAM: if let m = model as? GigaAMModel { GigaAMModelCardView(model: m, ...) }`
+- [x] В `ModelManagementView.swift` (~line 320) расширить фильтр `.local`: добавить `|| $0.provider == .gigaAM`
+- [x] `make all` — сборка проходит
+- [x] `make dev` — приложение запускается, в Settings → AI Models → фильтр Local появилась карточка GigaAM v3 (Russian) (skipped — manual smoke test, выносится в Task 7)
 
 ### Task 7: Smoke-test финальной интеграции
 

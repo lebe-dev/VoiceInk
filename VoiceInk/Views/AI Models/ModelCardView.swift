@@ -4,6 +4,7 @@ import AppKit
 struct ModelCardView: View {
     let model: any TranscriptionModel
     let fluidAudioModelManager: FluidAudioModelManager
+    let gigaAMModelManager: GigaAMModelManager
     let transcriptionModelManager: TranscriptionModelManager
     let isDownloaded: Bool
     let isCurrent: Bool
@@ -47,6 +48,14 @@ struct ModelCardView: View {
                     FluidAudioModelCardView(
                         model: fluidAudioModel,
                         fluidAudioModelManager: fluidAudioModelManager,
+                        transcriptionModelManager: transcriptionModelManager
+                    )
+                }
+            case .gigaAM:
+                if let gigaAMModel = model as? GigaAMModel {
+                    GigaAMModelCardView(
+                        model: gigaAMModel,
+                        gigaAMModelManager: gigaAMModelManager,
                         transcriptionModelManager: transcriptionModelManager
                     )
                 }

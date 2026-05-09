@@ -14,6 +14,7 @@ enum ModelFilter: String, CaseIterable, Identifiable {
 struct ModelManagementView: View {
     @EnvironmentObject private var whisperModelManager: WhisperModelManager
     @EnvironmentObject private var fluidAudioModelManager: FluidAudioModelManager
+    @EnvironmentObject private var gigaAMModelManager: GigaAMModelManager
     @EnvironmentObject private var transcriptionModelManager: TranscriptionModelManager
     @State private var customModelToEdit: CustomCloudModel?
     @StateObject private var aiService = AIService()
@@ -174,6 +175,7 @@ struct ModelManagementView: View {
                         ModelCardView(
                             model: model,
                             fluidAudioModelManager: fluidAudioModelManager,
+                            gigaAMModelManager: gigaAMModelManager,
                             transcriptionModelManager: transcriptionModelManager,
                             isDownloaded: whisperModelManager.availableModels.contains { $0.name == model.name },
                             isCurrent: transcriptionModelManager.currentTranscriptionModel?.name == model.name,
@@ -317,7 +319,7 @@ struct ModelManagementView: View {
             }
         case .local:
             return transcriptionModelManager.allAvailableModels.filter {
-                ($0.provider == .whisper || $0.provider == .nativeApple || $0.provider == .fluidAudio)
+                ($0.provider == .whisper || $0.provider == .nativeApple || $0.provider == .fluidAudio || $0.provider == .gigaAM)
                     && transcriptionModelManager.isAvailableOnCurrentOS($0)
             }
         case .cloud:
