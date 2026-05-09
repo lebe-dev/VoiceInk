@@ -15,10 +15,15 @@ set -euo pipefail
 SHERPA_VERSION="v1.13.0"
 SHERPA_ASSET="sherpa-onnx-${SHERPA_VERSION}-macos-xcframework-static.tar.bz2"
 SHERPA_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/${SHERPA_VERSION}/${SHERPA_ASSET}"
+# Pinned SHA-256 of the upstream release asset. Verified against the published
+# asset on 2026-05-09. If the upstream release is ever republished, the
+# digest must be updated by hand — never silently bypass this check.
+SHERPA_SHA256="a203a19db9ff66d548e448bffa8bdff801a2e2f07172d5eefe136ccf6e4086cf"
 
 ORT_VERSION="1.24.4"
 ORT_ASSET="onnxruntime-osx-universal2-static_lib-${ORT_VERSION}.zip"
 ORT_URL="https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${ORT_VERSION}/${ORT_ASSET}"
+ORT_SHA256="df4e20a6583ddc81fae7b1dfa776f6c06fa9c7cd32a3af44c9369c9e75731426"
 
 DEST_ROOT="${SHERPA_ONNX_DIR:-$HOME/VoiceInk-Dependencies/sherpa-onnx}"
 XCFRAMEWORK_PATH="${DEST_ROOT}/sherpa-onnx.xcframework"
@@ -36,8 +41,22 @@ mkdir -p "${DEST_ROOT}"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
+verify_sha256() {
+  local file="$1"
+  local expected="$2"
+  local actual
+  actual="$(shasum -a 256 "${file}" | awk '{print $1}')"
+  if [[ "${actual}" != "${expected}" ]]; then
+    echo "Error: SHA-256 mismatch for ${file}" >&2
+    echo "  expected: ${expected}" >&2
+    echo "  actual:   ${actual}" >&2
+    exit 1
+  fi
+}
+
 echo "Downloading ${SHERPA_URL} ..."
 curl -fL --retry 3 --retry-delay 2 -o "${TMP_DIR}/${SHERPA_ASSET}" "${SHERPA_URL}"
+verify_sha256 "${TMP_DIR}/${SHERPA_ASSET}" "${SHERPA_SHA256}"
 
 echo "Extracting ${SHERPA_ASSET} ..."
 tar xjf "${TMP_DIR}/${SHERPA_ASSET}" -C "${TMP_DIR}"
@@ -51,6 +70,7 @@ fi
 
 echo "Downloading ${ORT_URL} ..."
 curl -fL --retry 3 --retry-delay 2 -o "${TMP_DIR}/${ORT_ASSET}" "${ORT_URL}"
+verify_sha256 "${TMP_DIR}/${ORT_ASSET}" "${ORT_SHA256}"
 
 echo "Extracting ${ORT_ASSET} ..."
 unzip -q "${TMP_DIR}/${ORT_ASSET}" -d "${TMP_DIR}/onnxruntime"

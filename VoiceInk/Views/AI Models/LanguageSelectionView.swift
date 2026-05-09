@@ -63,6 +63,11 @@ struct LanguageSelectionView: View {
         return availableLanguagesForCurrentModel()[selectedLanguage] ?? "Unknown"
     }
 
+    // For non-multilingual models, return the single supported language's display name.
+    private func singleSupportedLanguageName() -> String {
+        availableLanguagesForCurrentModel().values.first ?? "Unknown"
+    }
+
     private var selectedLanguageBinding: Binding<String> {
         Binding(
             get: { selectedLanguage },
@@ -160,9 +165,13 @@ struct LanguageSelectionView: View {
                         .foregroundColor(.secondary)
                     }
                 } else {
-                    // For English-only models, force set language to English
+                    // Single-language model: render the actual supported language
+                    // (English for Whisper EN-only models, Russian for GigaAM, etc.).
+                    // The parent's useCompatibleLanguageForCurrentModel() already
+                    // applies the correct fallback via TranscriptionLanguageSupport.
+                    let languageName = singleSupportedLanguageName()
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Language: English")
+                        Text("Language: \(languageName)")
                             .font(.subheadline)
                             .foregroundColor(.primary)
 
@@ -170,15 +179,9 @@ struct LanguageSelectionView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        Text(
-                            "This is an English-optimized model and only supports English transcription."
-                        )
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    }
-                    .onAppear {
-                        // Ensure English is set when viewing English-only model
-                        updateLanguage("en")
+                        Text("This model only supports \(languageName) transcription.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             } else {
@@ -238,18 +241,14 @@ struct LanguageSelectionView: View {
                     }
                 }
             } else {
-                // For English-only models
+                // Single-language model — render the actual supported language.
                 Button {
                     // Do nothing, just showing info
                 } label: {
-                    Text("Language: English (only)")
+                    Text("Language: \(singleSupportedLanguageName()) (only)")
                         .foregroundColor(.secondary)
                 }
                 .disabled(true)
-                .onAppear {
-                    // Ensure English is set for English-only models
-                    updateLanguage("en")
-                }
             }
         }
     }

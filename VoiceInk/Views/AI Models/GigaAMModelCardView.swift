@@ -5,6 +5,7 @@ struct GigaAMModelCardView: View {
     let model: GigaAMModel
     @ObservedObject var gigaAMModelManager: GigaAMModelManager
     @ObservedObject var transcriptionModelManager: TranscriptionModelManager
+    @State private var downloadErrorMessage: String?
 
     init(model: GigaAMModel, gigaAMModelManager: GigaAMModelManager, transcriptionModelManager: TranscriptionModelManager) {
         self.model = model
@@ -38,6 +39,18 @@ struct GigaAMModelCardView: View {
         }
         .padding(16)
         .background(CardBackground(isSelected: isCurrent, useAccentGradientWhenSelected: isCurrent))
+        .alert(
+            "GigaAM download failed",
+            isPresented: Binding(
+                get: { downloadErrorMessage != nil },
+                set: { if !$0 { downloadErrorMessage = nil } }
+            ),
+            presenting: downloadErrorMessage
+        ) { _ in
+            Button("OK", role: .cancel) { downloadErrorMessage = nil }
+        } message: { message in
+            Text(message)
+        }
     }
 
     private var headerSection: some View {
@@ -134,7 +147,13 @@ struct GigaAMModelCardView: View {
             } else {
                 Button(action: {
                     Task {
-                        try? await gigaAMModelManager.downloadGigaAMModel(model)
+                        do {
+                            try await gigaAMModelManager.downloadGigaAMModel(model)
+                        } catch is CancellationError {
+                            // User-cancelled — silent.
+                        } catch {
+                            downloadErrorMessage = error.localizedDescription
+                        }
                     }
                 }) {
                     HStack(spacing: 4) {
