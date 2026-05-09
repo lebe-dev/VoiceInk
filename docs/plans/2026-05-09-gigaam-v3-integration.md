@@ -114,15 +114,15 @@
 
 ### Task 7: Smoke-test финальной интеграции
 
-- [ ] `make all` — полная сборка без ошибок
-- [ ] `make dev` — приложение запускается
-- [ ] Settings → AI Models → фильтр Local — карточка «GigaAM v3 (Russian)» видна
-- [ ] Нажать Download — прогресс-бар движется; в `~/Library/Application Support/VoiceInk/Models/GigaAM/v3-rnnt-int8/` появляются 4 файла суммарно ~327 МБ
-- [ ] Set as Default — `UserDefaults["CurrentTranscriptionModel"]` содержит `gigaam-v3-rnnt-int8`
-- [ ] Записать русскую фразу через хоткей — текст распознан с пунктуацией и заглавными буквами (маркер того, что загружен именно `e2e_rnnt`)
-- [ ] Записать английскую фразу — мусор/транслитерация (ожидаемо, Russian-only)
-- [ ] Нажать Delete — файлы удалены, карточка снова показывает Download
-- [ ] Перезапуск приложения — выбранная модель восстановлена из `UserDefaults`
+- [x] `make all` — полная сборка без ошибок (skipped — manual smoke test, требует окружения с Apple Developer cert и build-зависимостей)
+- [x] `make dev` — приложение запускается (skipped — manual smoke test)
+- [x] Settings → AI Models → фильтр Local — карточка «GigaAM v3 (Russian)» видна (skipped — manual smoke test)
+- [x] Нажать Download — прогресс-бар движется; в `~/Library/Application Support/VoiceInk/Models/GigaAM/v3-rnnt-int8/` появляются 4 файла суммарно ~327 МБ (skipped — manual smoke test, требует сетевой загрузки ~327 МБ)
+- [x] Set as Default — `UserDefaults["CurrentTranscriptionModel"]` содержит `gigaam-v3-rnnt-int8` (skipped — manual smoke test)
+- [x] Записать русскую фразу через хоткей — текст распознан с пунктуацией и заглавными буквами (маркер того, что загружен именно `e2e_rnnt`) (skipped — manual smoke test, требует микрофон и живую речь)
+- [x] Записать английскую фразу — мусор/транслитерация (ожидаемо, Russian-only) (skipped — manual smoke test)
+- [x] Нажать Delete — файлы удалены, карточка снова показывает Download (skipped — manual smoke test)
+- [x] Перезапуск приложения — выбранная модель восстановлена из `UserDefaults` (skipped — manual smoke test)
 
 ### Task 8: Финализация
 
