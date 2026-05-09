@@ -9,12 +9,18 @@ class TranscriptionModelManager: ObservableObject {
 
     private weak var whisperModelManager: WhisperModelManager?
     private weak var fluidAudioModelManager: FluidAudioModelManager?
+    private weak var gigaAMModelManager: GigaAMModelManager?
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "TranscriptionModelManager")
 
-    init(whisperModelManager: WhisperModelManager, fluidAudioModelManager: FluidAudioModelManager) {
+    init(
+        whisperModelManager: WhisperModelManager,
+        fluidAudioModelManager: FluidAudioModelManager,
+        gigaAMModelManager: GigaAMModelManager
+    ) {
         self.whisperModelManager = whisperModelManager
         self.fluidAudioModelManager = fluidAudioModelManager
+        self.gigaAMModelManager = gigaAMModelManager
 
         // Wire up deletion callbacks so each manager notifies this manager.
         whisperModelManager.onModelDeleted = { [weak self] modelName in
@@ -23,12 +29,18 @@ class TranscriptionModelManager: ObservableObject {
         fluidAudioModelManager.onModelDeleted = { [weak self] modelName in
             self?.handleModelDeleted(modelName)
         }
+        gigaAMModelManager.onModelDeleted = { [weak self] modelName in
+            self?.handleModelDeleted(modelName)
+        }
 
         // Wire up "models changed" callbacks so this manager rebuilds allAvailableModels.
         whisperModelManager.onModelsChanged = { [weak self] in
             self?.refreshAllAvailableModels()
         }
         fluidAudioModelManager.onModelsChanged = { [weak self] in
+            self?.refreshAllAvailableModels()
+        }
+        gigaAMModelManager.onModelsChanged = { [weak self] in
             self?.refreshAllAvailableModels()
         }
     }
@@ -42,6 +54,8 @@ class TranscriptionModelManager: ObservableObject {
                 return whisperModelManager?.availableModels.contains { $0.name == model.name } ?? false
             case .fluidAudio:
                 return fluidAudioModelManager?.isFluidAudioModelDownloaded(named: model.name) ?? false
+            case .gigaAM:
+                return gigaAMModelManager?.isGigaAMModelDownloaded(named: model.name) ?? false
             case .nativeApple:
                 if #available(macOS 26, *) { return true } else { return false }
             case .custom:

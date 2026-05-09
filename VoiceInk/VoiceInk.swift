@@ -15,6 +15,7 @@ struct VoiceInkApp: App {
     @StateObject private var engine: VoiceInkEngine
     @StateObject private var whisperModelManager: WhisperModelManager
     @StateObject private var fluidAudioModelManager: FluidAudioModelManager
+    @StateObject private var gigaAMModelManager: GigaAMModelManager
     @StateObject private var transcriptionModelManager: TranscriptionModelManager
     @StateObject private var recorderUIManager: RecorderUIManager
     @StateObject private var hotkeyManager: HotkeyManager
@@ -111,9 +112,11 @@ struct VoiceInkApp: App {
         // 2. Create model managers
         let whisperModelManager = WhisperModelManager(modelsDirectory: modelsDirectory)
         let fluidAudioModelManager = FluidAudioModelManager()
+        let gigaAMModelManager = GigaAMModelManager()
         let transcriptionModelManager = TranscriptionModelManager(
             whisperModelManager: whisperModelManager,
-            fluidAudioModelManager: fluidAudioModelManager
+            fluidAudioModelManager: fluidAudioModelManager,
+            gigaAMModelManager: gigaAMModelManager
         )
 
         // 3. Create UI manager
@@ -141,6 +144,7 @@ struct VoiceInkApp: App {
 
         _whisperModelManager = StateObject(wrappedValue: whisperModelManager)
         _fluidAudioModelManager = StateObject(wrappedValue: fluidAudioModelManager)
+        _gigaAMModelManager = StateObject(wrappedValue: gigaAMModelManager)
         _transcriptionModelManager = StateObject(wrappedValue: transcriptionModelManager)
         _recorderUIManager = StateObject(wrappedValue: recorderUIManager)
         _engine = StateObject(wrappedValue: engine)
@@ -279,6 +283,7 @@ struct VoiceInkApp: App {
                     .environmentObject(engine)
                     .environmentObject(whisperModelManager)
                     .environmentObject(fluidAudioModelManager)
+                    .environmentObject(gigaAMModelManager)
                     .environmentObject(transcriptionModelManager)
                     .environmentObject(recorderUIManager)
                     .environmentObject(hotkeyManager)
@@ -336,6 +341,7 @@ struct VoiceInkApp: App {
                     .environmentObject(engine)
                     .environmentObject(whisperModelManager)
                     .environmentObject(fluidAudioModelManager)
+                    .environmentObject(gigaAMModelManager)
                     .environmentObject(transcriptionModelManager)
                     .environmentObject(recorderUIManager)
                     .environmentObject(aiService)
@@ -364,6 +370,7 @@ struct VoiceInkApp: App {
                 .environmentObject(engine)
                 .environmentObject(whisperModelManager)
                 .environmentObject(fluidAudioModelManager)
+                .environmentObject(gigaAMModelManager)
                 .environmentObject(transcriptionModelManager)
                 .environmentObject(recorderUIManager)
                 .environmentObject(hotkeyManager)

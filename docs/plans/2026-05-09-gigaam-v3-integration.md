@@ -94,10 +94,10 @@
 - Modify: `VoiceInk/Transcription/Engine/TranscriptionModelManager.swift`
 - Modify: `VoiceInk/VoiceInk.swift`
 
-- [ ] В `TranscriptionServiceRegistry`: `private(set) lazy var gigaAMTranscriptionService = GigaAMTranscriptionService()` и ветка `case .gigaAM: return gigaAMTranscriptionService` в `service(for:)`
-- [ ] В `TranscriptionModelManager`: добавить `var gigaAMModelManager: GigaAMModelManager?` и в `usableModels` ветку `case .gigaAM: return gigaAMModelManager?.isGigaAMModelDownloaded(named: model.name) ?? false`
-- [ ] В `VoiceInkApp` (`VoiceInk.swift`): `@StateObject var gigaAMModelManager = GigaAMModelManager()`, прокинуть в `TranscriptionModelManager`, добавить `.environmentObject(gigaAMModelManager)` ко всем нужным view (по образцу `fluidAudioModelManager`)
-- [ ] `make all` — сборка проходит
+- [x] В `TranscriptionServiceRegistry`: `private(set) lazy var gigaAMTranscriptionService = GigaAMTranscriptionService()` и ветка `case .gigaAM: return gigaAMTranscriptionService` в `service(for:)`
+- [x] В `TranscriptionModelManager`: добавить `var gigaAMModelManager: GigaAMModelManager?` и в `usableModels` ветку `case .gigaAM: return gigaAMModelManager?.isGigaAMModelDownloaded(named: model.name) ?? false`
+- [x] В `VoiceInkApp` (`VoiceInk.swift`): `@StateObject var gigaAMModelManager = GigaAMModelManager()`, прокинуть в `TranscriptionModelManager`, добавить `.environmentObject(gigaAMModelManager)` ко всем нужным view (по образцу `fluidAudioModelManager`)
+- [x] `make all` — сборка проходит
 
 ### Task 6: UI-карточка модели
 
