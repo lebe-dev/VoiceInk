@@ -192,10 +192,10 @@ private struct GigaAMModelPaths {
     let tokens: URL
 
     init(directory: URL) {
-        self.encoder = directory.appendingPathComponent("v3_e2e_rnnt_encoder.int8.onnx")
-        self.decoder = directory.appendingPathComponent("v3_e2e_rnnt_decoder.onnx")
-        self.joiner = directory.appendingPathComponent("v3_e2e_rnnt_joint.onnx")
-        self.tokens = directory.appendingPathComponent("v3_e2e_rnnt_vocab.txt")
+        self.encoder = directory.appendingPathComponent("gigaam_v3_e2e_rnnt_encoder_int8.onnx")
+        self.decoder = directory.appendingPathComponent("gigaam_v3_e2e_rnnt_decoder.onnx")
+        self.joiner = directory.appendingPathComponent("gigaam_v3_e2e_rnnt_joint.onnx")
+        self.tokens = directory.appendingPathComponent("gigaam_v3_e2e_rnnt_tokens.txt")
     }
 
     func validate() throws {

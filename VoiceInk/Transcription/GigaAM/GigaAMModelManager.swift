@@ -13,7 +13,13 @@ private struct GigaAMModelFile {
     let sha256: String
 
     var huggingFaceURL: URL {
-        URL(string: "https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/main/\(filename)")!
+        // The istupakov/gigaam-v3-onnx weights on Hugging Face lack the
+        // `vocab_size` ONNX metadata field that sherpa-onnx's nemo_transducer
+        // loader requires — loading them aborts the process. The amidexe
+        // govorun-lite GitHub Release republishes the same weights with that
+        // metadata baked in (proven in the Android reference app), so we
+        // pull from there instead.
+        URL(string: "https://github.com/amidexe/govorun-lite/releases/download/model-gigaam-v3/\(filename)")!
     }
 }
 
@@ -31,24 +37,25 @@ final class GigaAMModelManager: ObservableObject {
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "GigaAMModelManager")
 
-    // SHA-256 hashes verified against istupakov/gigaam-v3-onnx on Hugging Face.
+    // SHA-256 hashes verified against the amidexe/govorun-lite "model-gigaam-v3"
+    // GitHub Release (the metadata-patched republish — see huggingFaceURL).
     private static let modelFiles: [String: [GigaAMModelFile]] = [
         "gigaam-v3-rnnt-int8": [
             GigaAMModelFile(
-                filename: "v3_e2e_rnnt_encoder.int8.onnx",
-                sha256: "4e0e076a6076cd110277e529b8ac8f32cd5297f7fbebad5341ae8ddb7d00817b"
+                filename: "gigaam_v3_e2e_rnnt_encoder_int8.onnx",
+                sha256: "2cac62d0c270bd128f898f2be1a2d34780d524a6e9483888ebac7b00f97410f1"
             ),
             GigaAMModelFile(
-                filename: "v3_e2e_rnnt_decoder.onnx",
-                sha256: "7b0a16d67fd2cb37061decc93c69e364a9ab27afee3c57495d55b1c974cf7231"
+                filename: "gigaam_v3_e2e_rnnt_decoder.onnx",
+                sha256: "781971998e6a355d6a714f6932a30eab295e7ba0d14fd7e0f78c83b87e811860"
             ),
             GigaAMModelFile(
-                filename: "v3_e2e_rnnt_joint.onnx",
+                filename: "gigaam_v3_e2e_rnnt_joint.onnx",
                 sha256: "602ff7017a93311aad34df1437c8d7f49911353c13d6eae7a6ee7b041339465c"
             ),
             GigaAMModelFile(
-                filename: "v3_e2e_rnnt_vocab.txt",
-                sha256: "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7"
+                filename: "gigaam_v3_e2e_rnnt_tokens.txt",
+                sha256: "7ddf22514c42c531358182c81446a8159771e9921019f09ae743ea622d40221d"
             ),
         ],
     ]
