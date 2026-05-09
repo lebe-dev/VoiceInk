@@ -12,13 +12,17 @@
 
 set -euo pipefail
 
-SHERPA_VERSION="v1.13.0"
+SHERPA_VERSION="v1.12.34"
 SHERPA_ASSET="sherpa-onnx-${SHERPA_VERSION}-macos-xcframework-static.tar.bz2"
 SHERPA_URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/${SHERPA_VERSION}/${SHERPA_ASSET}"
 # Pinned SHA-256 of the upstream release asset. Verified against the published
 # asset on 2026-05-09. If the upstream release is ever republished, the
 # digest must be updated by hand — never silently bypass this check.
-SHERPA_SHA256="a203a19db9ff66d548e448bffa8bdff801a2e2f07172d5eefe136ccf6e4086cf"
+#
+# Pinned to v1.12.34 to match the proven govorun-lite Android setup. v1.13.0
+# enforces a `vocab_size` ONNX metadata field that is absent from the
+# istupakov/gigaam-v3-onnx weights, causing a fatal load error.
+SHERPA_SHA256="dc3ef9f1db521d68a956653f003b1e8eef7f733f840f84858a3fe3d3ea2ac7be"
 
 ORT_VERSION="1.24.4"
 ORT_ASSET="onnxruntime-osx-universal2-static_lib-${ORT_VERSION}.zip"
