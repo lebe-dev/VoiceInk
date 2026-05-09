@@ -54,7 +54,11 @@ extension TranscriptionModel {
     }
 
     var language: String {
-        isMultilingualModel ? "Multilingual" : "English-only"
+        if isMultilingualModel { return "Multilingual" }
+        if supportedLanguages.count == 1, let only = supportedLanguages.values.first {
+            return "\(only)-only"
+        }
+        return "English-only"
     }
 
     var supportsStreaming: Bool { false }

@@ -1,5 +1,4 @@
 import Foundation
-import FluidAudio
 import SherpaOnnx
 import os.log
 
@@ -8,6 +7,7 @@ enum GigaAMTranscriptionError: LocalizedError {
     case recognizerInitializationFailed
     case streamCreationFailed
     case resultUnavailable
+    case invalidAudioData
 
     var errorDescription: String? {
         switch self {
@@ -19,6 +19,8 @@ enum GigaAMTranscriptionError: LocalizedError {
             return "Failed to create sherpa-onnx offline stream"
         case .resultUnavailable:
             return "sherpa-onnx returned no recognition result"
+        case .invalidAudioData:
+            return "Audio data is too short or malformed for GigaAM transcription"
         }
     }
 }
@@ -45,8 +47,18 @@ final class GigaAMTranscriptionService: TranscriptionService {
         guard let recognizer else { throw GigaAMTranscriptionError.recognizerInitializationFailed }
 
         let samples = try Self.readAudioSamples(from: audioURL)
-        let text = try await Self.decode(recognizer: recognizer, samples: samples)
-        return TextNormalizer.shared.normalizeSentence(text)
+        // GigaAM v3 produces Russian text with native punctuation/capitalization.
+        // TextNormalizer.shared is an English ITN — skip it.
+        return try await Self.decode(recognizer: recognizer, samples: samples)
+    }
+
+    func cleanup() {
+        if let recognizer {
+            SherpaOnnxDestroyOfflineRecognizer(recognizer)
+            self.recognizer = nil
+            self.loadedModelName = nil
+            logger.info("GigaAM recognizer released")
+        }
     }
 
     // MARK: - Loading
@@ -136,14 +148,18 @@ final class GigaAMTranscriptionService: TranscriptionService {
 
     private static func readAudioSamples(from url: URL) throws -> [Float] {
         let data = try Data(contentsOf: url)
-        guard data.count > 44 else {
-            throw GigaAMTranscriptionError.resultUnavailable
+        // 44-byte canonical PCM WAV header + at least one Int16 sample.
+        guard data.count >= 46 else {
+            throw GigaAMTranscriptionError.invalidAudioData
         }
 
-        return stride(from: 44, to: data.count, by: 2).map { offset in
+        // Bound the upper limit so the last 2-byte slice never reads past the end
+        // for odd-length payloads.
+        let end = data.count - ((data.count - 44) % 2)
+        return stride(from: 44, to: end, by: 2).map { offset in
             data[offset..<offset + 2].withUnsafeBytes {
                 let short = Int16(littleEndian: $0.load(as: Int16.self))
-                return max(-1.0, min(Float(short) / 32767.0, 1.0))
+                return max(-1.0, min(Float(short) / 32768.0, 1.0))
             }
         }
     }

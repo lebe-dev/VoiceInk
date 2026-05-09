@@ -24,6 +24,7 @@ final class GigaAMModelManager: ObservableObject {
 
     private var activeDownloadIDs: [String: UUID] = [:]
     private var activeDownloadTasks: [String: [URLSessionDownloadTask]] = [:]
+    private var activeProgressObservations: [String: [NSKeyValueObservation]] = [:]
 
     var onModelDeleted: ((String) -> Void)?
     var onModelsChanged: (() -> Void)?
@@ -132,7 +133,7 @@ final class GigaAMModelManager: ObservableObject {
 
             // Skip if already on disk and hash matches
             if FileManager.default.fileExists(atPath: dest.path),
-               (try? Self.verifySHA256(at: dest, expected: file.sha256)) == true {
+               (try? await Self.verifySHA256(at: dest, expected: file.sha256)) == true {
                 perFileProgress[index] = 1.0
                 updateAggregateProgress(modelName: modelName, downloadID: downloadID,
                                         perFile: perFileProgress, currentIndex: index, currentFile: file.filename)
@@ -152,7 +153,14 @@ final class GigaAMModelManager: ObservableObject {
                                              perFile: perFileProgress, currentIndex: index, currentFile: file.filename)
             }
 
-            try Self.verifySHA256(at: dest, expected: file.sha256, throwOnMismatch: true)
+            do {
+                try await Self.verifySHA256(at: dest, expected: file.sha256, throwOnMismatch: true)
+            } catch {
+                // Remove the corrupt download so isGigaAMModelDownloaded() doesn't
+                // mistakenly report a mismatched file as ready.
+                try? FileManager.default.removeItem(at: dest)
+                throw error
+            }
             perFileProgress[index] = 1.0
             updateAggregateProgress(modelName: modelName, downloadID: downloadID,
                                     perFile: perFileProgress, currentIndex: index, currentFile: file.filename)
@@ -164,7 +172,11 @@ final class GigaAMModelManager: ObservableObject {
         for task in activeDownloadTasks[modelName] ?? [] {
             task.cancel()
         }
+        for observation in activeProgressObservations[modelName] ?? [] {
+            observation.invalidate()
+        }
         activeDownloadTasks[modelName] = nil
+        activeProgressObservations[modelName] = nil
         activeDownloadIDs[modelName] = nil
         downloadStatuses[modelName] = nil
         downloadProgress[modelName] = nil
@@ -208,7 +220,11 @@ final class GigaAMModelManager: ObservableObject {
             let session = URLSession.shared
             let task = session.downloadTask(with: url) { tempURL, response, error in
                 if let error {
-                    continuation.resume(throwing: error)
+                    if (error as? URLError)?.code == .cancelled {
+                        continuation.resume(throwing: CancellationError())
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
                     return
                 }
 
@@ -230,18 +246,19 @@ final class GigaAMModelManager: ObservableObject {
                 }
             }
 
-            // Track for cancellation
-            self.activeDownloadTasks[modelName, default: []].append(task)
-
             let observation = task.progress.observe(\.fractionCompleted) { taskProgress, _ in
                 Task { @MainActor in
                     progress(taskProgress.fractionCompleted)
                 }
             }
-            // Keep observation alive for the lifetime of the task
+
+            // Retain task and KVO observation for the duration of the download —
+            // observations would otherwise be released when this closure returns,
+            // breaking progress callbacks.
+            self.activeDownloadTasks[modelName, default: []].append(task)
+            self.activeProgressObservations[modelName, default: []].append(observation)
+
             task.resume()
-            // Retain via objc-associated trick: attach into closure capturing list
-            withExtendedLifetime(observation) {}
         }
     }
 
@@ -271,6 +288,10 @@ final class GigaAMModelManager: ObservableObject {
 
     private func clearDownloadState(for modelName: String, downloadID: UUID) {
         guard activeDownloadIDs[modelName] == downloadID else { return }
+        for observation in activeProgressObservations[modelName] ?? [] {
+            observation.invalidate()
+        }
+        activeProgressObservations[modelName] = nil
         activeDownloadIDs[modelName] = nil
         activeDownloadTasks[modelName] = nil
         downloadStatuses[modelName] = nil
@@ -280,24 +301,28 @@ final class GigaAMModelManager: ObservableObject {
     // MARK: - SHA-256
 
     @discardableResult
-    private static func verifySHA256(at url: URL, expected: String, throwOnMismatch: Bool = false) throws -> Bool {
-        let handle = try FileHandle(forReadingFrom: url)
-        defer { try? handle.close() }
+    private static func verifySHA256(at url: URL, expected: String, throwOnMismatch: Bool = false) async throws -> Bool {
+        // Hashing 250+ MB of model weights would block the main actor; run on a
+        // background task.
+        try await Task.detached(priority: .utility) {
+            let handle = try FileHandle(forReadingFrom: url)
+            defer { try? handle.close() }
 
-        var hasher = SHA256()
-        while autoreleasepool(invoking: { () -> Bool in
-            let chunk = handle.availableData
-            if chunk.isEmpty { return false }
-            hasher.update(data: chunk)
-            return true
-        }) {}
+            var hasher = SHA256()
+            while autoreleasepool(invoking: { () -> Bool in
+                let chunk = handle.availableData
+                if chunk.isEmpty { return false }
+                hasher.update(data: chunk)
+                return true
+            }) {}
 
-        let actual = hasher.finalize().map { String(format: "%02x", $0) }.joined()
-        let matches = actual.caseInsensitiveCompare(expected) == .orderedSame
-        if !matches && throwOnMismatch {
-            throw GigaAMModelError.sha256Mismatch(file: url.lastPathComponent, expected: expected, actual: actual)
-        }
-        return matches
+            let actual = hasher.finalize().map { String(format: "%02x", $0) }.joined()
+            let matches = actual.caseInsensitiveCompare(expected) == .orderedSame
+            if !matches && throwOnMismatch {
+                throw GigaAMModelError.sha256Mismatch(file: url.lastPathComponent, expected: expected, actual: actual)
+            }
+            return matches
+        }.value
     }
 }
 

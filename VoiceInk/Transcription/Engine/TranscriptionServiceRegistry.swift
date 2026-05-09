@@ -73,5 +73,6 @@ class TranscriptionServiceRegistry {
 
     func cleanup() async {
         await fluidAudioTranscriptionService.cleanup()
+        gigaAMTranscriptionService.cleanup()
     }
 }
