@@ -29,6 +29,7 @@ enum GigaAMTranscriptionError: LocalizedError {
 final class GigaAMTranscriptionService: TranscriptionService {
     private var recognizer: OpaquePointer?
     private var loadedModelName: String?
+    private var pendingDecode: Task<String, Error>?
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink.gigaam", category: "GigaAMTranscriptionService")
 
@@ -49,10 +50,21 @@ final class GigaAMTranscriptionService: TranscriptionService {
         let samples = try Self.readAudioSamples(from: audioURL)
         // GigaAM v3 produces Russian text with native punctuation/capitalization.
         // TextNormalizer.shared is an English ITN — skip it.
-        return try await Self.decode(recognizer: recognizer, samples: samples)
+        let task = Task.detached(priority: .userInitiated) {
+            try Self.decode(recognizer: recognizer, samples: samples)
+        }
+        pendingDecode = task
+        defer { pendingDecode = nil }
+        return try await task.value
     }
 
-    func cleanup() {
+    // Awaits any in-flight decode before destroying the recognizer to avoid a
+    // use-after-free between the detached decode task and cleanup/teardown.
+    func cleanup() async {
+        if let pending = pendingDecode {
+            _ = try? await pending.value
+        }
+        pendingDecode = nil
         if let recognizer {
             SherpaOnnxDestroyOfflineRecognizer(recognizer)
             self.recognizer = nil
@@ -72,7 +84,7 @@ final class GigaAMTranscriptionService: TranscriptionService {
             self.loadedModelName = nil
         }
 
-        let modelDir = Self.gigaAMModelDirectory(for: modelName)
+        let modelDir = GigaAMModelManager.modelDirectory(for: modelName)
         let paths = GigaAMModelPaths(directory: modelDir)
         try paths.validate()
 
@@ -123,25 +135,23 @@ final class GigaAMTranscriptionService: TranscriptionService {
 
     // MARK: - Decoding
 
-    private static func decode(recognizer: OpaquePointer, samples: [Float]) async throws -> String {
-        try await Task.detached(priority: .userInitiated) {
-            guard let stream = SherpaOnnxCreateOfflineStream(recognizer) else {
-                throw GigaAMTranscriptionError.streamCreationFailed
-            }
-            defer { SherpaOnnxDestroyOfflineStream(stream) }
+    nonisolated private static func decode(recognizer: OpaquePointer, samples: [Float]) throws -> String {
+        guard let stream = SherpaOnnxCreateOfflineStream(recognizer) else {
+            throw GigaAMTranscriptionError.streamCreationFailed
+        }
+        defer { SherpaOnnxDestroyOfflineStream(stream) }
 
-            samples.withUnsafeBufferPointer { ptr in
-                SherpaOnnxAcceptWaveformOffline(stream, 16000, ptr.baseAddress, Int32(samples.count))
-            }
-            SherpaOnnxDecodeOfflineStream(recognizer, stream)
+        samples.withUnsafeBufferPointer { ptr in
+            SherpaOnnxAcceptWaveformOffline(stream, 16000, ptr.baseAddress, Int32(samples.count))
+        }
+        SherpaOnnxDecodeOfflineStream(recognizer, stream)
 
-            guard let result = SherpaOnnxGetOfflineStreamResult(stream) else {
-                throw GigaAMTranscriptionError.resultUnavailable
-            }
-            defer { SherpaOnnxDestroyOfflineRecognizerResult(result) }
+        guard let result = SherpaOnnxGetOfflineStreamResult(stream) else {
+            throw GigaAMTranscriptionError.resultUnavailable
+        }
+        defer { SherpaOnnxDestroyOfflineRecognizerResult(result) }
 
-            return result.pointee.text.map { String(cString: $0) } ?? ""
-        }.value
+        return result.pointee.text.map { String(cString: $0) } ?? ""
     }
 
     // MARK: - Audio I/O
@@ -164,13 +174,6 @@ final class GigaAMTranscriptionService: TranscriptionService {
         }
     }
 
-    // MARK: - Paths
-
-    private static func gigaAMModelDirectory(for modelName: String) -> URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("com.prakashjoshipax.VoiceInk")
-        return appSupport.appendingPathComponent("Models/GigaAM/\(modelName)")
-    }
 }
 
 private struct GigaAMModelPaths {

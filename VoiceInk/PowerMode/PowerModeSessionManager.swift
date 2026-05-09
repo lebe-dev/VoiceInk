@@ -231,7 +231,7 @@ class PowerModeSessionManager {
                     print("Power Mode: Failed to load local model '\(whisperModel.name)': \(error)")
                 }
             }
-        case .fluidAudio:
+        case .fluidAudio, .gigaAM:
             await stateProvider.cleanupModelResources()
         default:
             await stateProvider.cleanupModelResources()

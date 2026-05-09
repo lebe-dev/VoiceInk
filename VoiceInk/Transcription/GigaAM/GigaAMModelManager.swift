@@ -59,10 +59,14 @@ final class GigaAMModelManager: ObservableObject {
 
     // MARK: - Paths
 
-    func gigaAMModelDirectory(for modelName: String = "gigaam-v3-rnnt-int8") -> URL {
+    static func modelDirectory(for modelName: String) -> URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("com.prakashjoshipax.VoiceInk")
         return appSupport.appendingPathComponent("Models/GigaAM/\(modelName)")
+    }
+
+    func gigaAMModelDirectory(for modelName: String = "gigaam-v3-rnnt-int8") -> URL {
+        Self.modelDirectory(for: modelName)
     }
 
     // MARK: - Query helpers
@@ -303,18 +307,21 @@ final class GigaAMModelManager: ObservableObject {
     @discardableResult
     private static func verifySHA256(at url: URL, expected: String, throwOnMismatch: Bool = false) async throws -> Bool {
         // Hashing 250+ MB of model weights would block the main actor; run on a
-        // background task.
+        // background task with a bounded buffer to keep peak memory low.
         try await Task.detached(priority: .utility) {
             let handle = try FileHandle(forReadingFrom: url)
             defer { try? handle.close() }
 
             var hasher = SHA256()
-            while autoreleasepool(invoking: { () -> Bool in
-                let chunk = handle.availableData
-                if chunk.isEmpty { return false }
+            let chunkSize = 1 << 20
+            while true {
+                try Task.checkCancellation()
+                let chunk = try autoreleasepool { () throws -> Data in
+                    try handle.read(upToCount: chunkSize) ?? Data()
+                }
+                if chunk.isEmpty { break }
                 hasher.update(data: chunk)
-                return true
-            }) {}
+            }
 
             let actual = hasher.finalize().map { String(format: "%02x", $0) }.joined()
             let matches = actual.caseInsensitiveCompare(expected) == .orderedSame
