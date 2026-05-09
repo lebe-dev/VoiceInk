@@ -20,6 +20,7 @@
 		E1F1037B2EF85FC700A4FF94 /* SelectedTextKit in Frameworks */ = {isa = PBXBuildFile; productRef = E1F1037A2EF85FC700A4FF94 /* SelectedTextKit */; };
 		E1F350112F1D10D600790A2C /* whisper.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1A0BD052EB1E7B800266859 /* whisper.xcframework */; };
 		E1F350122F1D10D600790A2C /* whisper.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1A0BD052EB1E7B800266859 /* whisper.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E1A11A00B3BA0326385483CB /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1A11A050AF90F290D14624B /* sherpa-onnx.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 		E1A0BD052EB1E7B800266859 /* whisper.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = whisper.xcframework; path = "$(HOME)/VoiceInk-Dependencies/whisper.cpp/build-apple/whisper.xcframework"; sourceTree = "<group>"; };
 		E1B2DCAA2E3DE70A008DFD68 /* whisper.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = whisper.xcframework; path = "../whisper.cpp/build-apple/whisper.xcframework"; sourceTree = "<group>"; };
 		E1CE28772E4336150082B758 /* whisper.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = whisper.xcframework; path = "../build-apple/whisper.xcframework"; sourceTree = "<group>"; };
+		E1A11A050AF90F290D14624B /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "$(HOME)/VoiceInk-Dependencies/sherpa-onnx/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -98,6 +100,7 @@
 				E1DD20E12FA20AEE0020AF3B /* LLMkit in Frameworks */,
 				E1F1037B2EF85FC700A4FF94 /* SelectedTextKit in Frameworks */,
 				E1A261122CC143AC00B233D1 /* KeyboardShortcuts in Frameworks */,
+				E1A11A00B3BA0326385483CB /* sherpa-onnx.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +149,7 @@
 				E1A0BD052EB1E7B800266859 /* whisper.xcframework */,
 				E1CE28772E4336150082B758 /* whisper.xcframework */,
 				E1B2DCAA2E3DE70A008DFD68 /* whisper.xcframework */,
+				E1A11A050AF90F290D14624B /* sherpa-onnx.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -157,6 +161,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = E11473D72CBE0F0B00318EE4 /* Build configuration list for PBXNativeTarget "VoiceInk" */;
 			buildPhases = (
+				E1A11A02CF9F88313EF48FB9 /* Setup sherpa-onnx */,
 				E11473AC2CBE0F0A00318EE4 /* Sources */,
 				E11473AD2CBE0F0A00318EE4 /* Frameworks */,
 				E11473AE2CBE0F0A00318EE4 /* Resources */,
@@ -285,6 +290,29 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E1A11A02CF9F88313EF48FB9 /* Setup sherpa-onnx */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Scripts/setup-sherpa-onnx.sh",
+			);
+			name = "Setup sherpa-onnx";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "set -euo pipefail\nbash \"${SCRIPT_INPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
 		E11473AE2CBE0F0A00318EE4 /* Resources */ = {
