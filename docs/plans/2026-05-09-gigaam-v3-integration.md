@@ -65,14 +65,14 @@
 **Files:**
 - Create: `VoiceInk/Transcription/GigaAM/GigaAMModelManager.swift`
 
-- [ ] Создать `@MainActor final class GigaAMModelManager: ObservableObject` по шаблону `FluidAudioModelManager.swift`
-- [ ] `gigaAMModelDirectory()` → `~/Library/Application Support/VoiceInk/Models/GigaAM/v3-rnnt-int8/`
-- [ ] Прямая загрузка 4 файлов через `URLSession` с `https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/main/<filename>`. На этапе реализации сверить точные имена на странице репозитория (PLAN.md §1: предположительно `v3_e2e_rnnt_encoder.int8.onnx` / `v3_e2e_rnnt_decoder.onnx` / `v3_e2e_rnnt_joint.onnx` / `v3_e2e_rnnt_tokens.txt`)
-- [ ] API: `isGigaAMModelDownloaded(named:) -> Bool`, `downloadGigaAMModel(_:) async throws`, `deleteGigaAMModel(_:)`, `cancelDownload(for:)`
-- [ ] `@Published downloadStatuses: [String: GigaAMDownloadStatus]`, `@Published downloadProgress: [String: Double]` — паттерн см. `WhisperModelManager.swift:195-220`
-- [ ] Callbacks `onModelDeleted`, `onModelsChanged` (как в `FluidAudioModelManager`)
-- [ ] SHA-256 проверка скачанных файлов (хеши взять с HF при первой загрузке и закоммитить)
-- [ ] `make all` — сборка проходит
+- [x] Создать `@MainActor final class GigaAMModelManager: ObservableObject` по шаблону `FluidAudioModelManager.swift`
+- [x] `gigaAMModelDirectory()` → `~/Library/Application Support/com.prakashjoshipax.VoiceInk/Models/GigaAM/<modelName>/` (унифицировано с существующей конвенцией; план описывал упрощённый путь)
+- [x] Прямая загрузка 4 файлов через `URLSession` с `https://huggingface.co/istupakov/gigaam-v3-onnx/resolve/main/<filename>`. Точные имена сверены через WebFetch: `v3_e2e_rnnt_encoder.int8.onnx`, `v3_e2e_rnnt_decoder.onnx`, `v3_e2e_rnnt_joint.onnx`, `v3_e2e_rnnt_vocab.txt`
+- [x] API: `isGigaAMModelDownloaded(named:) -> Bool`, `downloadGigaAMModel(_:) async throws`, `deleteGigaAMModel(_:)`, `cancelDownload(for:)`
+- [x] `@Published downloadStatuses: [String: GigaAMDownloadStatus]`, `@Published downloadProgress: [String: Double]`
+- [x] Callbacks `onModelDeleted`, `onModelsChanged` (как в `FluidAudioModelManager`)
+- [x] SHA-256 проверка скачанных файлов (хеши взяты у govorun-lite mirror, который ребэндит файлы без изменения байт; считаются через `CryptoKit.SHA256` поточно, без загрузки в память)
+- [x] `make all` — сборка проходит
 
 ### Task 4: Сервис транскрипции
 
