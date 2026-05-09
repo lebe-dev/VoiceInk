@@ -31,18 +31,16 @@ final class GigaAMModelManager: ObservableObject {
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "GigaAMModelManager")
 
-    // SHA-256 hashes verified from upstream files mirrored by govorun-lite
-    // (github.com/amidexe/govorun-lite/releases/tag/model-gigaam-v3). The mirror
-    // renames files but preserves byte content, so hashes equal the HF originals.
+    // SHA-256 hashes verified against istupakov/gigaam-v3-onnx on Hugging Face.
     private static let modelFiles: [String: [GigaAMModelFile]] = [
         "gigaam-v3-rnnt-int8": [
             GigaAMModelFile(
                 filename: "v3_e2e_rnnt_encoder.int8.onnx",
-                sha256: "2cac62d0c270bd128f898f2be1a2d34780d524a6e9483888ebac7b00f97410f1"
+                sha256: "4e0e076a6076cd110277e529b8ac8f32cd5297f7fbebad5341ae8ddb7d00817b"
             ),
             GigaAMModelFile(
                 filename: "v3_e2e_rnnt_decoder.onnx",
-                sha256: "781971998e6a355d6a714f6932a30eab295e7ba0d14fd7e0f78c83b87e811860"
+                sha256: "7b0a16d67fd2cb37061decc93c69e364a9ab27afee3c57495d55b1c974cf7231"
             ),
             GigaAMModelFile(
                 filename: "v3_e2e_rnnt_joint.onnx",
@@ -50,7 +48,7 @@ final class GigaAMModelManager: ObservableObject {
             ),
             GigaAMModelFile(
                 filename: "v3_e2e_rnnt_vocab.txt",
-                sha256: "7ddf22514c42c531358182c81446a8159771e9921019f09ae743ea622d40221d"
+                sha256: "39abae20e692998290c574e606f11a9edef2902a1995463fcff63d1490cf22b7"
             ),
         ],
     ]

@@ -134,7 +134,7 @@ struct GigaAMModel: TranscriptionModel {
         name: "gigaam-v3-rnnt-int8",
         displayName: "GigaAM v3 (Russian)",
         description: "Sber GigaAM v3 E2E RNN-T (int8) — local Russian transcription with punctuation and capitalization",
-        size: "327 MB",
+        size: "232 MB",
         speed: 0.9,
         accuracy: 0.95,
         ramUsage: 0.8

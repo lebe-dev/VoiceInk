@@ -88,6 +88,11 @@ final class ModelPrewarmService: ObservableObject {
         } catch {
             logger.error("❌ Prewarm failed: \(error.localizedDescription, privacy: .public)")
         }
+
+        // Release the local recognizer; the engine's registry will reload on
+        // the first real transcription. Without this the prewarm registry pins
+        // a second recognizer in memory for the entire app lifetime.
+        await serviceRegistry.cleanup()
     }
 
     // MARK: - Validation

@@ -29,7 +29,7 @@ enum GigaAMTranscriptionError: LocalizedError {
 final class GigaAMTranscriptionService: TranscriptionService {
     private var recognizer: OpaquePointer?
     private var loadedModelName: String?
-    private var pendingDecode: Task<String, Error>?
+    private var pendingDecodes: Set<Task<String, Error>> = []
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink.gigaam", category: "GigaAMTranscriptionService")
 
@@ -44,7 +44,7 @@ final class GigaAMTranscriptionService: TranscriptionService {
     // MARK: - TranscriptionService
 
     func transcribe(audioURL: URL, model: any TranscriptionModel) async throws -> String {
-        try ensureLoaded(modelName: model.name)
+        try await ensureLoaded(modelName: model.name)
         guard let recognizer else { throw GigaAMTranscriptionError.recognizerInitializationFailed }
 
         let samples = try Self.readAudioSamples(from: audioURL)
@@ -53,18 +53,15 @@ final class GigaAMTranscriptionService: TranscriptionService {
         let task = Task.detached(priority: .userInitiated) {
             try Self.decode(recognizer: recognizer, samples: samples)
         }
-        pendingDecode = task
-        defer { pendingDecode = nil }
+        pendingDecodes.insert(task)
+        defer { pendingDecodes.remove(task) }
         return try await task.value
     }
 
-    // Awaits any in-flight decode before destroying the recognizer to avoid a
-    // use-after-free between the detached decode task and cleanup/teardown.
+    // Awaits all in-flight decodes before destroying the recognizer to avoid a
+    // use-after-free between detached decode tasks and cleanup/teardown.
     func cleanup() async {
-        if let pending = pendingDecode {
-            _ = try? await pending.value
-        }
-        pendingDecode = nil
+        await drainPendingDecodes()
         if let recognizer {
             SherpaOnnxDestroyOfflineRecognizer(recognizer)
             self.recognizer = nil
@@ -75,13 +72,18 @@ final class GigaAMTranscriptionService: TranscriptionService {
 
     // MARK: - Loading
 
-    private func ensureLoaded(modelName: String) throws {
+    private func ensureLoaded(modelName: String) async throws {
         if recognizer != nil, loadedModelName == modelName { return }
 
-        if let recognizer {
-            SherpaOnnxDestroyOfflineRecognizer(recognizer)
-            self.recognizer = nil
-            self.loadedModelName = nil
+        // A model switch destroys the recognizer; drain detached decodes first
+        // so they don't dereference a freed pointer.
+        if recognizer != nil {
+            await drainPendingDecodes()
+            if let recognizer {
+                SherpaOnnxDestroyOfflineRecognizer(recognizer)
+                self.recognizer = nil
+                self.loadedModelName = nil
+            }
         }
 
         let modelDir = GigaAMModelManager.modelDirectory(for: modelName)
@@ -99,6 +101,13 @@ final class GigaAMTranscriptionService: TranscriptionService {
         }
 
         throw GigaAMTranscriptionError.recognizerInitializationFailed
+    }
+
+    private func drainPendingDecodes() async {
+        while let task = pendingDecodes.first {
+            _ = try? await task.value
+            pendingDecodes.remove(task)
+        }
     }
 
     private func createRecognizer(paths: GigaAMModelPaths, provider: String) -> OpaquePointer? {
