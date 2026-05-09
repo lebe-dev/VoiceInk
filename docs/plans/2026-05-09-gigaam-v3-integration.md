@@ -53,12 +53,12 @@
 - Modify: `VoiceInk/Models/TranscriptionModelRegistry.swift`
 - Modify: `VoiceInk/Models/LanguageDictionary.swift`
 
-- [ ] В enum `ModelProvider` добавить `case gigaAM = "GigaAM"`
-- [ ] Создать структуру `GigaAMModel: TranscriptionModel` по образцу `FluidAudioModel`: `provider = .gigaAM`, `size = "327 MB"`, `supportsStreaming = false`, `isMultilingualModel = false`, `supportedLanguages = ["ru": "Russian"]`
-- [ ] Добавить `static let gigaAmV3RnntInt8 = GigaAMModel(name: "gigaam-v3-rnnt-int8", displayName: "GigaAM v3 (Russian)", ...)`
-- [ ] В `TranscriptionModelRegistry.predefinedModels` добавить `GigaAMModel.gigaAmV3RnntInt8` после блока FluidAudio
-- [ ] В `LanguageDictionary.forProvider` добавить ветку `.gigaAM` → `["ru": "Russian"]`
-- [ ] `make all` — сборка проходит
+- [x] В enum `ModelProvider` добавить `case gigaAM = "GigaAM"`
+- [x] Создать структуру `GigaAMModel: TranscriptionModel` по образцу `FluidAudioModel`: `provider = .gigaAM`, `size = "327 MB"`, `supportsStreaming = false`, `isMultilingualModel = false`, `supportedLanguages = ["ru": "Russian"]`
+- [x] Добавить `static let gigaAmV3RnntInt8 = GigaAMModel(name: "gigaam-v3-rnnt-int8", displayName: "GigaAM v3 (Russian)", ...)`
+- [x] В `TranscriptionModelRegistry.predefinedModels` добавить `GigaAMModel.gigaAmV3RnntInt8` после блока FluidAudio
+- [x] В `LanguageDictionary.forProvider` добавить ветку `.gigaAM` → `["ru": "Russian"]`
+- [x] `make all` — сборка проходит
 
 ### Task 3: Менеджер модели (загрузка / проверка / удаление)
 

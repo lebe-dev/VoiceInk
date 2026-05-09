@@ -4,6 +4,7 @@ import Foundation
 enum ModelProvider: String, Codable, Hashable, CaseIterable {
     case whisper = "Whisper"
     case fluidAudio = "Parakeet"
+    case gigaAM = "GigaAM"
     case groq = "Groq"
     case elevenLabs = "ElevenLabs"
     case deepgram = "Deepgram"
@@ -98,6 +99,42 @@ struct FluidAudioModel: TranscriptionModel {
         self.supportsStreaming = supportsStreaming
         self.supportedLanguages = supportedLanguages
     }
+}
+
+// A new struct for GigaAM models (Sber, MIT) — local Russian-only ASR via sherpa-onnx
+struct GigaAMModel: TranscriptionModel {
+    let id = UUID()
+    let name: String
+    let displayName: String
+    let description: String
+    let provider: ModelProvider = .gigaAM
+    let size: String
+    let speed: Double
+    let accuracy: Double
+    let ramUsage: Double
+    let supportsStreaming: Bool = false
+    let isMultilingualModel: Bool = false
+    let supportedLanguages: [String: String] = ["ru": "Russian"]
+
+    init(name: String, displayName: String, description: String, size: String, speed: Double, accuracy: Double, ramUsage: Double) {
+        self.name = name
+        self.displayName = displayName
+        self.description = description
+        self.size = size
+        self.speed = speed
+        self.accuracy = accuracy
+        self.ramUsage = ramUsage
+    }
+
+    static let gigaAmV3RnntInt8 = GigaAMModel(
+        name: "gigaam-v3-rnnt-int8",
+        displayName: "GigaAM v3 (Russian)",
+        description: "Sber GigaAM v3 E2E RNN-T (int8) — local Russian transcription with punctuation and capitalization",
+        size: "327 MB",
+        speed: 0.9,
+        accuracy: 0.95,
+        ramUsage: 0.8
+    )
 }
 
 // A new struct for cloud models

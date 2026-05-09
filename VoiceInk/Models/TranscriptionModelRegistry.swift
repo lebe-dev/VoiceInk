@@ -41,6 +41,9 @@ enum TranscriptionModelRegistry {
                 supportedLanguages: LanguageDictionary.forProvider(isMultilingual: true, provider: .fluidAudio)
             ),
 
+            // GigaAM Models
+            GigaAMModel.gigaAmV3RnntInt8,
+
             // Local Models
             WhisperModel(
                 name: "ggml-tiny",

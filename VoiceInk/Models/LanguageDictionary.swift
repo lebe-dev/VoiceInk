@@ -99,6 +99,9 @@ enum LanguageDictionary {
             filtered["auto"] = "Auto-detect"
             return filtered
 
+        case .gigaAM:
+            return ["ru": "Russian"]
+
         default:
             return all
         }
