@@ -79,13 +79,13 @@
 **Files:**
 - Create: `VoiceInk/Transcription/GigaAM/GigaAMTranscriptionService.swift`
 
-- [ ] Создать `@MainActor final class GigaAMTranscriptionService: TranscriptionService` по шаблону `FluidAudioTranscriptionService.swift`
-- [ ] `ensureLoaded(modelDir:)`: построить `sherpaOnnxOfflineModelConfig` с `transducer` (encoder/decoder/joiner), `tokens`, `numThreads: 2`, `modelType: "nemo_transducer"`, `provider: "coreml"` с fallback на `"cpu"` в catch
-- [ ] `transcribe(audioURL:model:)`: прочитать PCM16LE → Float32 [-1,1] @ 16 kHz mono (паттерн `FluidAudioTranscriptionService.swift:127-145`); создать stream → `acceptWaveform` → `decode` → `getResult().text`
-- [ ] Прогнать результат через `TextNormalizer.shared.normalizeSentence(...)` (как в FluidAudio-сервисе)
-- [ ] Точные имена API (snake_case vs camelCase, префикс `Sherpa`) уточнить при первой компиляции — Swift API sherpa-onnx может слегка отличаться от Kotlin-референса
-- [ ] VAD-чанкинг не делаем; sherpa-onnx проглатывает длинный буфер
-- [ ] `make all` — сборка проходит
+- [x] Создать `@MainActor final class GigaAMTranscriptionService: TranscriptionService` по шаблону `FluidAudioTranscriptionService.swift`
+- [x] `ensureLoaded(modelName:)`: построить `SherpaOnnxOfflineRecognizerConfig` с `transducer` (encoder/decoder/joiner), `tokens`, `num_threads: 2`, `model_type: "nemo_transducer"`, провайдер `"coreml"` с fallback на `"cpu"` (после возврата `nil` из `SherpaOnnxCreateOfflineRecognizer`)
+- [x] `transcribe(audioURL:model:)`: прочитать PCM16LE → Float32 [-1,1] @ 16 kHz mono; `SherpaOnnxCreateOfflineStream` → `SherpaOnnxAcceptWaveformOffline` → `SherpaOnnxDecodeOfflineStream` → `SherpaOnnxGetOfflineStreamResult().text`. Тяжёлый decode выведен в `Task.detached(priority: .userInitiated)`, чтобы не блокировать main actor.
+- [x] Прогнать результат через `TextNormalizer.shared.normalizeSentence(...)` (импорт из FluidAudio пакета)
+- [x] Уточнено по факту: Swift импортирует C-API напрямую (модуль `SherpaOnnx`), типы handle-ов — `OpaquePointer?`. Swift-обёртка sherpa-onnx отсутствует, поэтому используем сырые `SherpaOnnx*` функции; имена строго PascalCase из `c-api.h`.
+- [x] VAD-чанкинг не делаем; sherpa-onnx проглатывает длинный буфер
+- [x] `make all` — сборка проходит
 
 ### Task 5: Регистрация сервиса и менеджера в движке
 
